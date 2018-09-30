@@ -2,8 +2,7 @@ from core.utils import *
 from core import tracker
 from .parameters import Parameters
 import numpy as np
-
-
+import pandas as pd
 def process_frame(frame: np.ndarray, params: Parameters, mask=None) -> np.ndarray:
     if params.adjust_gamma:
         frame = adjust_gamma(frame, gamma=params.gamma)
@@ -19,3 +18,12 @@ def process_frame(frame: np.ndarray, params: Parameters, mask=None) -> np.ndarra
     annotated = tracker.annotate_frame(frame, particles)
 
     return annotated
+
+
+def process_video(video: np.ndarray, params: Parameters, mask=None, threads=28) -> pd.DataFrame:
+    if mask is not None:
+        video = mask_video(video, mask)
+
+    df = tracker.locate_batch(video, params.diameter, params.minmass, params.maxmass, params.maxsize, threads)
+
+    return df

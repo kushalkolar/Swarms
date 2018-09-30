@@ -73,3 +73,4 @@ def mask_video(video: np.ndarray, mask: np.ndarray) -> np.ndarray:
         video[i, :, :] = cv2.bitwise_and(video[i, :, :], mask)
 
     return video
+

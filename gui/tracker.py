@@ -115,7 +115,6 @@ class TrackerWindow(QtWidgets.QMainWindow):
         annotated = process_frame(self.video[self.ui.horizontalSliderFrameIndex.value(), :, :], self.params, self.arena_mask)
 
         self.ui.image_item.setImage(np.swapaxes(annotated, 0, 1))
-        print(annotated.shape)
 
         self.ui.statusbar.showMessage('Finished updating params!')
 
@@ -132,7 +131,7 @@ class TrackerWindow(QtWidgets.QMainWindow):
         self.ui.statusbar.showMessage('Loading video, please wait...')
         self.video = utils.load_video(path[0])
 
-        self.ui.horizontalSliderFrameIndex.setMaximum(self.video.shape[0])
+        self.ui.horizontalSliderFrameIndex.setMaximum(self.video.shape[0] - 1)
         self.ui.spinBoxFrameIndex.setMaximum(self.video.shape[0] - 1)
         self.ui.horizontalSliderFrameIndex.setValue(0)
 
