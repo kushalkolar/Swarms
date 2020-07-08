@@ -15,6 +15,7 @@ class TrackerWindow(QtWidgets.QMainWindow):
         self.ui.setupUi(self)
 
         self.params = Parameters(
+            video_path=None,
             diameter=self.ui.spinBoxDiameter.value(),
             minmass=self.ui.spinBoxMinmass.value(),
             maxmass=self.ui.spinBoxMaxmass.value(),
@@ -43,6 +44,8 @@ class TrackerWindow(QtWidgets.QMainWindow):
 
         self.connect_actions()
         self.connect_ui()
+
+        self.ui.pushButton_save_params.clicked.connect(self.save_params)
 
         self.arena_mask = None
 
@@ -92,6 +95,7 @@ class TrackerWindow(QtWidgets.QMainWindow):
         self.ui.statusbar.showMessage('Updating params, please wait ...')
 
         self.params = Parameters(
+            video_path=self.params.video_path,
             diameter=self.ui.spinBoxDiameter.value(),
             minmass=self.ui.spinBoxMinmass.value(),
             maxmass=self.ui.spinBoxMaxmass.value(),
@@ -129,7 +133,20 @@ class TrackerWindow(QtWidgets.QMainWindow):
         self.ui.lineEditCurrentItemName.setText(vid_name)
 
         self.ui.statusbar.showMessage('Loading video, please wait...')
-        self.video = utils.load_video(path[0])
+
+        if QtWidgets.QMessageBox.question(
+            self,
+            'Load entire video?',
+            'Load the entire video into RAM? If you select "No" the first 1000 frames are loaded into RAM.',
+            QtWidgets.QMessageBox.No,
+            QtWidgets.QMessageBox.Yes
+        ) \
+                == QtWidgets.QMessageBox.Yes:
+            self.video = utils.load_video(path[0])
+        else:
+            self.video = utils.load_video(path[0], num_frames=1000)
+
+        self.params.video_path = path[0]
 
         self.ui.horizontalSliderFrameIndex.setMaximum(self.video.shape[0] - 1)
         self.ui.spinBoxFrameIndex.setMaximum(self.video.shape[0] - 1)
@@ -138,3 +155,11 @@ class TrackerWindow(QtWidgets.QMainWindow):
         self.ui.image_item.setImage(self.video[0, :, :].T)
         self.arena_mask = None
         self.ui.statusbar.showMessage('Finished loading video!')
+
+    def save_params(self):
+        d = os.path.dirname(self.params.video_path)
+        fname = os.path.basename(self.params.video_path).split('.')[0]
+
+        path = os.path.join(d, f'{fname}.json')
+
+        self.params.to_json(path)

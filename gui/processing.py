@@ -13,6 +13,9 @@ def process_frame(frame: np.ndarray, params: Parameters, mask=None) -> np.ndarra
     if mask is not None:
         frame = mask_arena(frame, mask)
 
+    if params.maxsize < 0:
+        return frame
+
     particles = tracker.locate(frame, diameter=params.diameter, minmass=params.minmass, maxmass=params.maxmass, maxsize=params.maxsize)
 
     annotated = tracker.annotate_frame(frame, particles)

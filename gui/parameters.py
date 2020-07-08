@@ -3,6 +3,7 @@ import json
 
 class Parameters:
     def __init__(self,
+                 video_path: str,
                  diameter: int,
                  minmass: int,
                  maxmass: int,
@@ -24,7 +25,7 @@ class Parameters:
                  params_name: str):
 
         self.parameters = locals().keys()
-
+        self.video_path = video_path
         self.diameter = diameter
         self.minmass = minmass
         self.maxmass = maxmass
@@ -48,6 +49,8 @@ class Parameters:
     def get_dict(self):
         d = {}
         for param in self.parameters:
+            if param == 'self':
+                continue
             d.update({param: getattr(self, param)})
         return d
 
@@ -55,3 +58,13 @@ class Parameters:
     def from_json(cls, path):
         d = json.load(open(path))
         return cls(**d)
+
+    def to_json(self, path: str):
+        d = self.get_dict()
+
+        to_lists = lambda v: list(v) if isinstance(v, tuple) else v
+
+        for k in d.keys():
+            d[k] = to_lists(d[k])
+
+        json.dump(d, open(path, 'w'))

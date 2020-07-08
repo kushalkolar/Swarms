@@ -1,10 +1,19 @@
 import numpy as np
 import cv2
 import skvideo.io
+from gui.parameters import Parameters
+import os
+from tqdm import tqdm
 
 
-def load_video(path: str) -> np.ndarray:
-    return skvideo.io.vread(path, as_grey=True)[:, :, :, 0]
+def load_video(path: str, **kwargs) -> np.ndarray:
+    """
+
+    :param path:
+    :param kwargs: passed to skvideo.io.vread
+    :return:
+    """
+    return skvideo.io.vread(path, as_grey=True, **kwargs)[:, :, :, 0]
 
 
 def adjust_gamma(img: np.ndarray, gamma: float) -> np.ndarray:
@@ -74,3 +83,65 @@ def mask_video(video: np.ndarray, mask: np.ndarray) -> np.ndarray:
 
     return video
 
+
+def write_masked_video(params: Parameters):
+
+    # get the first frame to create the mask
+    cap = cv2.VideoCapture(params.video_path)
+
+    for i in range(100):
+        cap.read()
+
+    r, img = cap.read()
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # create a mask
+    mask = get_mask(
+        gray,
+        param1=params.circle_param1,
+        param2=params.circle_param2,
+        min_radius=params.circle_minradius,
+        max_radius=params.circle_maxradius
+    )
+
+    w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+    out_path = os.path.join(
+        os.path.dirname(params.video_path),
+        'circle_masked',
+        f'circle_masked-{os.path.basename(params.video_path)}'
+    )
+
+    fps = cap.get(cv2.CAP_PROP_FPS)
+
+    cap.release()
+
+    fourcc = cv2.VideoWriter_fourcc(*"XVID")
+    out = cv2.VideoWriter(out_path, fourcc, fps, (w, h), isColor=False)
+
+    cap = cv2.VideoCapture(params.video_path)
+
+    print("Writing frames...")
+    n_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+    pbar = tqdm(total=n_frames)
+    ix = 0
+    while cap.isOpened():
+        r, img = cap.read()
+
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        # if ix == 100:
+        #     break
+
+        if r:
+            out_img = mask_arena(gray, mask)
+            out.write(out_img)
+            pbar.update(1)
+            # ix +=1
+
+        else:
+            break
+
+    cap.release()
+    out.release()
