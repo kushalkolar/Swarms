@@ -125,20 +125,15 @@ def write_masked_video(params: Parameters):
     print("Writing frames...")
     n_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     pbar = tqdm(total=n_frames)
-    ix = 0
+
     while cap.isOpened():
         r, img = cap.read()
 
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-        # if ix == 100:
-        #     break
-
         if r:
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             out_img = mask_arena(gray, mask)
             out.write(out_img)
             pbar.update(1)
-            # ix +=1
 
         else:
             break
